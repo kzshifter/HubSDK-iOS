@@ -5,29 +5,28 @@ import Foundation
 
 /// A thread-safe container for preloaded paywall placements.
 ///
-/// This actor manages the lifecycle of placement entries, including fetching
-/// paywalls and their associated products from Adapty during initialization.
-/// Once loaded, entries are accessible via synchronous iteration or lookup.
+/// This class manages immutable placement entries loaded during initialization.
+/// All data is write-once, making it inherently thread-safe without locks.
 ///
 /// ## Example Usage
 ///
 /// ```swift
-/// let bag = try await PlacementBag(["onboarding_placement", "settings_placement"], locale: "en_US")
+/// let bag = try await PlacementBag(["onboarding", "settings"], locale: "en_US")
 ///
-/// if let entry = bag.entry(for: "onboarding_placement") {
+/// if let entry = bag.entry(for: "onboarding") {
 ///     // Use the placement entry
 /// }
 /// ```
-actor PlacementBag {
+public final class PlacementBag: Sendable {
     
     // MARK: - Properties
     
     /// The list of placement identifiers managed by this bag.
-    private(set) var placementIdentifiers: [String] = []
+    public let placementIdentifiers: [String]
     
-    /// The loaded placement entries.
-    private(set) var entries: [PlacementEntry] = []
-    nonisolated(unsafe) private var cachedEntries: [PlacementEntry] = []
+    /// The loaded placement entries (immutable after init).
+    private let entries: [PlacementEntry]
+    
     // MARK: - Initialization
     
     /// Creates a new placement bag by fetching paywalls for the specified identifiers.
@@ -39,8 +38,11 @@ actor PlacementBag {
     ///   - identifiers: The placement identifiers to load.
     ///   - locale: The locale identifier for paywall localization.
     /// - Throws: An error if any paywall or product fetch fails.
-    init(_ identifiers: [String], locale: String) async throws {
+    public init(_ identifiers: [String], locale: String) async throws {
         self.placementIdentifiers = identifiers
+        
+        var loadedEntries: [PlacementEntry] = []
+        loadedEntries.reserveCapacity(identifiers.count)
         
         for id in identifiers {
             let paywall = try await Adapty.getPaywall(placementId: id, locale: locale)
@@ -67,53 +69,69 @@ actor PlacementBag {
                 remoteConfigData: remoteConfigData
             )
             
-            entries.append(entry)
+            loadedEntries.append(entry)
         }
         
-        cachedEntries = entries
+        self.entries = loadedEntries
     }
     
     // MARK: - Lookup
     
     /// Returns the placement entry for the specified identifier.
     ///
-    /// This method provides synchronous access to cached placement data.
-    ///
     /// - Parameter placementId: The unique identifier of the placement.
     /// - Returns: The matching placement entry, or `nil` if not found.
-    nonisolated public func entry(for placementId: String) -> PlacementEntry? {
-        cachedEntries.first(where: { $0.placementId == placementId })
+    public func entry(for placementId: String) -> PlacementEntry? {
+        entries.first { $0.placementId == placementId }
+    }
+    
+    /// Returns all loaded entries.
+    public var allEntries: [PlacementEntry] {
+        entries
+    }
+    
+    /// The number of loaded placements.
+    public var count: Int {
+        entries.count
+    }
+    
+    /// Whether the bag contains any placements.
+    public var isEmpty: Bool {
+        entries.isEmpty
     }
 }
 
 // MARK: - Sequence Conformance
 
-extension PlacementBag: @preconcurrency Sequence {
-    
-    func makeIterator() -> PlacementBagIterator {
-        PlacementBagIterator(entries: entries)
+extension PlacementBag: Sequence {
+    public func makeIterator() -> IndexingIterator<[PlacementEntry]> {
+        entries.makeIterator()
     }
 }
 
-// MARK: - PlacementBagIterator
+// MARK: - Collection Convenience
 
-struct PlacementBagIterator: IteratorProtocol {
-    
-    private var entries: [PlacementEntry]
-    private var currentIndex: Int = 0
-    
-    init(entries: [PlacementEntry]) {
-        self.entries = entries
-        
+extension PlacementBag {
+    /// Subscript access by placement ID.
+    public subscript(placementId: String) -> PlacementEntry? {
+        entry(for: placementId)
     }
     
-    mutating func next() -> PlacementEntry? {
-        guard currentIndex < entries.count else {
-            return nil
+    /// Returns entries matching the given predicate.
+    public func entries(where predicate: (PlacementEntry) -> Bool) -> [PlacementEntry] {
+        entries.filter(predicate)
+    }
+    
+    /// Returns all builder (remote) paywalls.
+    public var builderEntries: [PlacementEntry] {
+        entries.filter { $0.identifier == .builder }
+    }
+    
+    /// Returns all local paywalls.
+    public var localEntries: [PlacementEntry] {
+        entries.filter {
+            if case .local = $0.identifier { return true }
+            return false
         }
-        
-        let entry = entries[currentIndex]
-        currentIndex += 1
-        return entry
     }
 }

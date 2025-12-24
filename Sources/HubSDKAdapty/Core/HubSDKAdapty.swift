@@ -359,7 +359,7 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
             
             if result.isPurchaseSuccess {
                 await refreshSubscriptionStatus(for: config.accessLevels)
-                StormEventBus.shared.publish(.successPurchase)
+                HubEventBus.shared.publish(.successPurchase)
             }
             
             return result

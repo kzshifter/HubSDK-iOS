@@ -113,7 +113,7 @@ final public class HubPaywallPresenter {
       /// - Parameter animated: Whether to animate the dismissal.
       public func dismiss() async {
           let animationEnable = currentConfig?.animationEnable ?? false
-          if currentConfig?.presentType == .push {
+          if currentConfig?.presentType == .present {
               presentedViewController?.dismiss(animated: animationEnable)
           } else {
               presentedViewController?
@@ -174,11 +174,21 @@ final public class HubPaywallPresenter {
                                 paywall: UIViewController,
                                 type: HubPaywallPresentConfiguration.PresentType,
                                 withAnimation status: Bool) {
-        if type == .present {
+        switch type {
+        case .present:
             paywall.modalPresentationStyle = .fullScreen
             presenter.present(paywall, animated: status)
-        } else if let navigationController = presenter as? UINavigationController {
-            navigationController.pushViewController(paywall, animated: status)
+            
+        case .push:
+            if let nav = presenter as? UINavigationController {
+                nav.pushViewController(paywall, animated: status)
+            } else if let nav = presenter.navigationController {
+                nav.pushViewController(paywall, animated: status)
+            } else {
+                assertionFailure("[HubSDK] Push requested but no UINavigationController available")
+                paywall.modalPresentationStyle = .fullScreen
+                presenter.present(paywall, animated: status)
+            }
         }
     }
 }

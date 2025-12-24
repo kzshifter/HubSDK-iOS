@@ -1,7 +1,7 @@
 import Foundation
-import StormSDKCore
+import HubSDKCore
 
-public extension StormSDKCore {
+public extension HubSDKCore {
     var adapty: HubSDKAdaptyProviding? {
         integration(ofType: HubAdaptyIntegration.self)?.provider
     }

@@ -8,7 +8,7 @@
 import Foundation
 import HubIntegrationCore
 
-public final class HubAdaptyIntegration: StormDependencyIntegration, AwaitableIntegration {
+public final class HubAdaptyIntegration: HubDependencyIntegration, AwaitableIntegration {
     public static var name: String { "Adapty" }
     public var provider: HubSDKAdaptyProviding { adapty }
     

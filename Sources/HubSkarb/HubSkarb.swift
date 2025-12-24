@@ -22,7 +22,7 @@ public struct HubSkarbConfiguration: Sendable {
 
 // MARK: - Integration (Facade)
 
-public final class HubSkarbIntegration: StormDependencyIntegration, AwaitableIntegration {
+public final class HubSkarbIntegration: HubDependencyIntegration, AwaitableIntegration {
     public static var name: String { "Skarb" }
     
     public var provider: HubSkarbProviding { skarb }
@@ -50,7 +50,7 @@ public final class HubSkarbIntegration: StormDependencyIntegration, AwaitableInt
 
 // MARK: - Implementation
 
-internal final class HubSkarb: NSObject, HubSkarbProviding, StormEventListener {
+internal final class HubSkarb: NSObject, HubSkarbProviding, HubEventListener {
     
     private let config: HubSkarbConfiguration
     
@@ -60,12 +60,12 @@ internal final class HubSkarb: NSObject, HubSkarbProviding, StormEventListener {
     }
     
     deinit {
-        StormEventBus.shared.unsubscribe(self)
+        HubEventBus.shared.unsubscribe(self)
     }
     
     func start() {
         SkarbSDK.initialize(clientId: config.clientId, isObservable: config.observerMode)
-        StormEventBus.shared.subscribe(self)
+        HubEventBus.shared.subscribe(self)
     }
     
     // MARK: - Public API
@@ -76,7 +76,7 @@ internal final class HubSkarb: NSObject, HubSkarbProviding, StormEventListener {
     
     // MARK: - StormEventListener
     
-    nonisolated func handle(event: StormEvent) {
+    nonisolated func handle(event: HubEvent) {
         if case let .conversionDataReceived(conversionInfo) = event {
             SkarbSDK.sendSource(broker: .appsflyer, features: conversionInfo, brokerUserID: "")
         }

@@ -15,7 +15,7 @@ public protocol HubAppsflyerProviding {
 
 // MARK: - Integration (Facade)
 
-public final class HubAppsflyerIntegration: StormDependencyIntegration, AwaitableIntegration {
+public final class HubAppsflyerIntegration: HubDependencyIntegration, AwaitableIntegration {
     public static var name: String { "AppsflyerLib" }
     
     public var provider: HubAppsflyerProviding { appsflyer }
@@ -77,7 +77,7 @@ extension HubAppsflyer: AppsFlyerLibDelegate {
             }
         }
         
-        StormEventBus.shared.publish(.conversionDataReceived(sendableData))
+        HubEventBus.shared.publish(.conversionDataReceived(sendableData))
         onReady?()
     }
     

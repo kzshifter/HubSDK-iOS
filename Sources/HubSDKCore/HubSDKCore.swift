@@ -5,7 +5,7 @@ import HubIntegrationCore
 open class HubSDKCore {
     public static let shared = HubSDKCore()
     
-    private var integrations: [any StormDependencyIntegration] = []
+    private var integrations: [any HubDependencyIntegration] = []
     private var awaitState = AwaitState()
     
     public init() {}
@@ -14,7 +14,7 @@ open class HubSDKCore {
     /// - Parameters:
     ///   - integration: The integration instance to register.
     ///   - awaitReady: If `true`, `waitUntilReady()` will wait for this integration to signal readiness.
-    public func register(_ integration: any StormDependencyIntegration, awaitReady: Bool = false) {
+    public func register(_ integration: any HubDependencyIntegration, awaitReady: Bool = false) {
         integrations.append(integration)
         
         if awaitReady {
@@ -31,7 +31,7 @@ open class HubSDKCore {
     }
     
     /// Returns a registered integration of the specified type.
-    public func integration<T: StormDependencyIntegration>(ofType type: T.Type) -> T? {
+    public func integration<T: HubDependencyIntegration>(ofType type: T.Type) -> T? {
         integrations.first { $0 is T } as? T
     }
 }
@@ -65,7 +65,7 @@ private extension HubSDKCore {
         }
     }
     
-    func configureAwaitableIfNeeded(_ integration: any StormDependencyIntegration) {
+    func configureAwaitableIfNeeded(_ integration: any HubDependencyIntegration) {
         guard var awaitable = integration as? AwaitableIntegration else { return }
         
         let name = type(of: integration).name
@@ -100,7 +100,7 @@ public extension HubSDKCore {
         await withCheckedContinuation { cont in
             awaitState.continuation = cont
             
-            Task {
+            Task { @MainActor in
                 try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
                 awaitState.resume()
             }

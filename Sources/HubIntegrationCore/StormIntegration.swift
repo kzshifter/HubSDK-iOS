@@ -8,7 +8,7 @@
 import Foundation
 
 @MainActor
-public protocol StormDependencyIntegration {
+public protocol HubDependencyIntegration {
     associatedtype Provider
     
     static var name: String { get }

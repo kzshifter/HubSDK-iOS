@@ -119,7 +119,7 @@ public struct HubGoogleAdsConfiguration: Sendable {
 
 // MARK: - Integration
 
-public final class HubGoogleAdsIntegration: StormDependencyIntegration, AwaitableIntegration {
+public final class HubGoogleAdsIntegration: HubDependencyIntegration, AwaitableIntegration {
     public static var name: String { "GoogleAds" }
     
     public var provider: HubGoogleAdsProviding { googleAds }
