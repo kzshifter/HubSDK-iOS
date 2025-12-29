@@ -26,3 +26,21 @@ final class HubFacebook: HubFacebookProviding, @unchecked Sendable {
         ApplicationDelegate.shared.application(application, open: url, options: options)
     }
 }
+
+extension HubFacebook: HubEventListener {
+    public func handle(event: HubEvent) {
+        // track cases custom event and purchase
+        switch event {
+        case .successPurchase(let amount, let currency):
+            AppEvents.shared.logPurchase(amount: amount, currency: currency)
+            AppEvents.shared.logEvent(AppEvents.Name(rawValue: HubEventNames.HUBPurchase))
+        case .event(let name, let params):
+            let convertedParams = params.reduce(into: [AppEvents.ParameterName : Any]()) { partialResult, dictValue in
+                partialResult[AppEvents.ParameterName(rawValue: dictValue.key)] = dictValue.value
+            }
+            AppEvents.shared.logEvent(AppEvents.Name(rawValue: name), parameters: convertedParams)
+        default:
+            break
+        }
+    }
+}

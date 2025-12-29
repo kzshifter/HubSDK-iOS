@@ -85,3 +85,18 @@ extension HubAppsflyer: AppsFlyerLibDelegate {
         onReady?()
     }
 }
+
+extension AppsFlyerLib: HubEventListener {
+    public func handle(event: HubEvent) {
+        // track cases custom event and purchase
+        switch event {
+        case .successPurchase(let amount, let currency):
+            AppsFlyerLib.shared().logEvent(AFEventPurchase, withValues: ["amount": amount, "currency": currency])
+            AppsFlyerLib.shared().logEvent(HubEventNames.HUBPurchase, withValues: ["amount": amount, "currency": currency])
+        case .event(let name, let params):
+            AppsFlyerLib.shared().logEvent(name, withValues: params)
+        default:
+            break
+        }
+    }
+}

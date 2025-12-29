@@ -2,7 +2,8 @@ import Foundation
 
 public enum HubEvent {
     case conversionDataReceived([String: String])
-    case successPurchase
+    case successPurchase(amount: Double, currency: String)
+    case event(name: String, params: [String: Any])
 }
 
 public protocol HubEventListener: AnyObject {
