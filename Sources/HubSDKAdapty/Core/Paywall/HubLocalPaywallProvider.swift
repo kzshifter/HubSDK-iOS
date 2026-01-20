@@ -1,11 +1,3 @@
-//
-//  to.swift
-//  StormSDKAdapty
-//
-//  Created by Vadzim Ivanchanka on 11/26/25.
-//
-
-
 import Adapty
 import UIKit
 
@@ -17,21 +9,16 @@ import UIKit
 /// with purchase controls, restoration, or dismissal actions.
 public protocol HubLocalPaywallDelegate: AnyObject {
     
-    /// Called when the user selects a product.
-    ///
-    /// - Parameter product: The selected product.
-    func localPaywallDidSelectProduct(_ product: AdaptyPaywallProduct)
-    
-    /// Called when the user initiates a purchase.
+    /// Called when the user finish a purchase.
     ///
     /// - Parameter product: The product to purchase.
-    func localPaywallDidTapPurchase(_ product: AdaptyPaywallProduct)
+    func purchaseLocalPaywallFinish(_ result: AdaptyPurchaseResult, product: AdaptyPaywallProduct)
     
     /// Called when the user requests purchase restoration.
-    func localPaywallDidTapRestore()
+    func restoreLocalPaywallFinish(_ profile: AdaptyProfile)
     
     /// Called when the user dismisses the paywall.
-    func localPaywallDidTapClose()
+    func closeLocalPaywallAction()
 }
 
 // MARK: - LocalPaywallProvider

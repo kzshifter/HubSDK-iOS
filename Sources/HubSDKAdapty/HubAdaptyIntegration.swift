@@ -1,10 +1,3 @@
-//
-//  StormAdaptyIntegration.swift
-//  StormSDKCore
-//
-//  Created by Vadzim Ivanchanka on 12/4/25.
-//
-
 import Foundation
 import HubIntegrationCore
 
@@ -27,7 +20,8 @@ public final class HubAdaptyIntegration: HubDependencyIntegration, AwaitableInte
             do {
                 try await adapty.start(config: config)
                 markAsReady()
-            } catch {
+            } catch let error {
+                print(error)
                 markAsReady()
             }
         }

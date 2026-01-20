@@ -2,19 +2,7 @@ import Foundation
 import UIKit
 import Adapty
 import AdaptyUI
-
-public struct HubPaywallPresentConfiguration {
-    let presentType: PresentType
-    let animationEnable: Bool
-    let dissmissEnable: Bool
-    
-    //MARK: Types
-    
-    public enum PresentType {
-        case push
-        case present
-    }
-}
+import HubIntegrationCore
 
 // MARK: - PaywallCoordinatorDelegate
 
@@ -27,9 +15,6 @@ public protocol HubPaywallCoordinatorDelegate: AnyObject {
     /// Called when purchase restoration completes.
     func paywallCoordinator(_ coordinator: HubPaywallPresenter, didFinishRestoreWith entry: AccessEntry)
     
-    /// Called when a purchase or restore operation fails.
-    func paywallCoordinator(_ coordinator: HubPaywallPresenter, didFailWith error: Error)
-    
     /// Called when the paywall is dismissed.
     func paywallCoordinatorDidClose(_ coordinator: HubPaywallPresenter)
 }
@@ -39,7 +24,6 @@ public protocol HubPaywallCoordinatorDelegate: AnyObject {
 public extension HubPaywallCoordinatorDelegate {
     func paywallCoordinator(_ coordinator: HubPaywallPresenter, didFinishPurchaseWith result: AdaptyPurchaseResult) {}
     func paywallCoordinator(_ coordinator: HubPaywallPresenter, didFinishRestoreWith entry: AccessEntry) {}
-    func paywallCoordinator(_ coordinator: HubPaywallPresenter, didFailWith error: Error) {}
     func paywallCoordinatorDidClose(_ coordinator: HubPaywallPresenter) {}
 }
 
@@ -47,12 +31,12 @@ public extension HubPaywallCoordinatorDelegate {
 final public class HubPaywallPresenter {
     
     private let sdk: (any HubSDKAdaptyProviding & Sendable)
-    private weak var localPaywallProvider: HubLocalPaywallProvider?
+    private var localPaywallProvider: HubLocalPaywallProvider?
     private var presentedViewController: UIViewController?
     private var currentEntry: PlacementEntry?
     private var currentConfig: HubPaywallPresentConfiguration?
     
-    public weak var delegate: HubPaywallCoordinatorDelegate?
+    public var delegate: HubPaywallCoordinatorDelegate?
     
     /// Creates a new paywall coordinator.
     ///
@@ -112,18 +96,16 @@ final public class HubPaywallPresenter {
       ///
       /// - Parameter animated: Whether to animate the dismissal.
       public func dismiss() async {
-          let animationEnable = currentConfig?.animationEnable ?? false
-          if currentConfig?.presentType == .present {
-              presentedViewController?.dismiss(animated: animationEnable)
-          } else {
-              presentedViewController?
-              .navigationController?
-              .popViewController(animated: animationEnable)
+          if currentConfig?.dissmissEnable ?? true {
+              let animationEnable = currentConfig?.animationEnable ?? false
+              if currentConfig?.presentType == .present {
+                  presentedViewController?.dismiss(animated: animationEnable)
+              } else {
+                  presentedViewController?
+                  .navigationController?
+                  .popViewController(animated: animationEnable)
+              }
           }
-         
-          presentedViewController = nil
-          currentEntry = nil
-          currentConfig = nil
       }
       
       // MARK: - Private Methods
@@ -191,18 +173,59 @@ final public class HubPaywallPresenter {
             }
         }
     }
+    
+    private func dispose() {
+        presentedViewController = nil
+        currentEntry = nil
+        currentConfig = nil
+        localPaywallProvider = nil
+        delegate = nil
+    }
 }
 
 //MARK: Local Paywall Delegate
 
 extension HubPaywallPresenter: @preconcurrency HubLocalPaywallDelegate {
-    public func localPaywallDidSelectProduct(_ product: any AdaptyPaywallProduct) {}
+    public func purchaseLocalPaywallFinish(_ result: AdaptyPurchaseResult, product: AdaptyPaywallProduct) {
+        self.purchaseValidator(purchaseResult: result, product: product)
+    }
     
-    public func localPaywallDidTapPurchase(_ product: any AdaptyPaywallProduct) {}
+    public func restoreLocalPaywallFinish(_ profile: AdaptyProfile) {
+        self.restoreValidator()
+    }
     
-    public func localPaywallDidTapRestore() {}
+    public func closeLocalPaywallAction() {
+        Task { @MainActor in
+            self.delegate?.paywallCoordinatorDidClose(self)
+            await self.dismiss()
+            self.dispose()
+        }
+    }
     
-    public func localPaywallDidTapClose() {}
+    private func restoreValidator() {
+        Task {
+            if let access = try? await sdk.validateSubscription() {
+                delegate?.paywallCoordinator(self, didFinishRestoreWith: access)
+            }
+        }
+    }
+    
+    private func purchaseValidator(purchaseResult: AdaptyPurchaseResult, product: AdaptyPaywallProduct) {
+        delegate?.paywallCoordinator(self, didFinishPurchaseWith: purchaseResult)
+        
+        if purchaseResult.isPurchaseSuccess {
+            /// Track purchase
+            let amount = product.price
+            let currencyCode = product.currencyCode ?? ""
+            HubEventBus.shared.publish(.successPurchase(amount: amount.doubleValue, currency: currencyCode))
+            
+            /// Dismiss after success purchase
+            Task {
+                await self.dismiss()
+                self.dispose()
+            }
+        }
+    }
 }
 
 
@@ -210,20 +233,25 @@ extension HubPaywallPresenter: @preconcurrency HubLocalPaywallDelegate {
 
 extension HubPaywallPresenter: AdaptyPaywallControllerDelegate {
     public func paywallController(_ controller: AdaptyPaywallController, didFailRestoreWith error: AdaptyError) {}
-    
-    public func paywallController(_ controller: AdaptyPaywallController, didFinishRestoreWith profile: AdaptyProfile) {}
-    
     public func paywallController(_ controller: AdaptyPaywallController, didFailPurchase product: any AdaptyPaywallProduct, error: AdaptyError) {}
+    
+    public func paywallController(_ controller: AdaptyPaywallController, didFinishRestoreWith profile: AdaptyProfile) {
+        self.restoreValidator()
+    }
     
     public func paywallController(_ controller: AdaptyPaywallController, didPerform action: AdaptyUI.Action) {
         switch action {
         case .close:
-            if currentConfig?.dissmissEnable ?? false {
-                Task {
-                    await self.dismiss()
-                }
+            Task {
+                delegate?.paywallCoordinatorDidClose(self)
+                await self.dismiss()
+                self.dispose()
             }
         default: break
         }
+    }
+    
+    public func paywallController(_ controller: AdaptyPaywallController, didFinishPurchase product: any AdaptyPaywallProduct, purchaseResult: AdaptyPurchaseResult) {
+        self.purchaseValidator(purchaseResult: purchaseResult, product: product)
     }
 }

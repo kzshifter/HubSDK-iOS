@@ -299,6 +299,11 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
         }
     }
     
+    public func validateSubscription() async -> AccessEntry {
+        guard let accessLevels = cachedSnapshot.config?.accessLevels else { return .init(isActive: false, isRenewable: false)}
+        return await validateSubscription(for: accessLevels)
+    }
+    
     // MARK: Placement Access (Sync)
     
     nonisolated public func placementEntry(with placementId: String) -> PlacementEntry? {
@@ -359,7 +364,10 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
             
             if result.isPurchaseSuccess {
                 await refreshSubscriptionStatus(for: config.accessLevels)
-                HubEventBus.shared.publish(.successPurchase)
+                
+                let amount = product.price
+                let currencyCode = product.currencyCode ?? ""
+                HubEventBus.shared.publish(.successPurchase(amount: amount.doubleValue, currency: currencyCode))
             }
             
             return result
@@ -422,6 +430,11 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
         }
     }
     
+    nonisolated public func validateSubscription(completion: @Sendable @escaping (AccessEntry) -> Void) {
+        guard let accessLevels = cachedSnapshot.config?.accessLevels else { completion(.init(isActive: false, isRenewable: false)); return}
+        validateSubscription(for: accessLevels, completion: completion)
+    }
+    
     nonisolated public func purchase(
         with product: any AdaptyPaywallProduct,
         completion: @Sendable @escaping (Result<AdaptyPurchaseResult, Error>) -> Void
@@ -470,5 +483,62 @@ extension HubSDKAdapty {
     /// - Throws: `StormSDKError` if restoration fails.
     public func restore(for accessLevel: AccessLevel) async throws -> AccessEntry {
         try await restore(for: [accessLevel])
+    }
+}
+
+
+extension HubSDKAdapty {
+    
+    // MARK: - Lazy Loading
+    
+    /// Loads additional placements into the existing bag.
+    ///
+    /// Use this method to load placements on-demand after SDK initialization.
+    /// Already loaded placements are skipped automatically.
+    ///
+    /// - Parameter identifiers: The placement identifiers to load.
+    /// - Returns: Array of newly loaded entries (excludes already cached).
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not initialized.
+    public func loadPlacements(_ identifiers: [String]) async throws -> [PlacementEntry] {
+        let (_, placementBag) = try ensureReady()
+        return try await placementBag.load(identifiers)
+    }
+    
+    /// Retrieves a placement with optional lazy loading.
+    ///
+    /// When `loadIfNeeded` is `true`, fetches the placement from network
+    /// if not already cached. Otherwise returns only from cache.
+    ///
+    /// - Parameters:
+    ///   - identifier: The placement identifier.
+    ///   - loadIfNeeded: If `true`, loads the placement if not cached.
+    /// - Returns: The placement entry.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not initialized.
+    /// - Throws: `HubSDKError.placementNotFound` if not found and loading is disabled.
+    public func placementEntry(
+        for identifier: String,
+        loadIfNeeded: Bool
+    ) async throws -> PlacementEntry {
+        let (_, placementBag) = try ensureReady()
+        
+        if loadIfNeeded {
+            return try await placementBag.loadIfNeeded(identifier)
+        } else {
+            guard let entry = placementBag.entry(for: identifier) else {
+                throw HubSDKError.placementNotFound(identifier)
+            }
+            return entry
+        }
+    }
+    
+    /// Checks whether a placement is already loaded.
+    ///
+    /// Use this to determine if synchronous access via `placementEntry(with:)`
+    /// will return a value, or if async loading is required.
+    ///
+    /// - Parameter identifier: The placement identifier to check.
+    /// - Returns: `true` if the placement is cached and available.
+    nonisolated public func isPlacementLoaded(_ identifier: String) -> Bool {
+        cachedSnapshot.placementBag?.isLoaded(identifier) ?? false
     }
 }

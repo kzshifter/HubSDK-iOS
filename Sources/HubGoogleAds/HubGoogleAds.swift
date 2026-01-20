@@ -1,10 +1,3 @@
-//
-//  StormGoogleAds.swift
-//  HubSDKCore
-//
-//  Created by Vadzim Ivanchanka on 12/17/25.
-//
-
 import Foundation
 import GoogleMobileAds
 import HubIntegrationCore
@@ -96,7 +89,7 @@ public struct HubGoogleAdsConfiguration: Sendable {
         appOpenKey: String = "",
         maxRetryAttempts: Int = 2,
         awaitAdTypes: AdType = .none,
-        awaitTimeout: TimeInterval = 10,
+        awaitTimeout: TimeInterval = 6,
         debug: Bool = false
     ) {
         if debug {

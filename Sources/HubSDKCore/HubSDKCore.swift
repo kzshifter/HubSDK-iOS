@@ -108,10 +108,10 @@ public extension HubSDKCore {
     }
     
     /// Completion-based variant of `waitUntilReady`.
-    func waitUntilReady(timeout: TimeInterval = 10, completion: @escaping @MainActor () -> Void) {
+    nonisolated func waitUntilReady(timeout: TimeInterval = 10, completion: @escaping @MainActor () -> Void) {
         Task {
             await waitUntilReady(timeout: timeout)
-            completion()
+            await MainActor.run { completion() }
         }
     }
 }

@@ -2,23 +2,23 @@ import Foundation
 import HubIntegrationCore
 
 public protocol HubAnalyticsProviding {
-    func trackEvent(name: String, params: [String: Any])
-    func trackSuccessPurchase(amount: Double, currency: String)
+    static func trackEvent(name: String, params: [String: Any])
+    static func trackSuccessPurchase(amount: Double, currency: String)
 }
 
 extension HubAnalyticsProviding {
-    func trackEvent(name: String) {
+    static func trackEvent(name: String) {
         trackEvent(name: name, params: [:])
     }
 }
 
-final class HubAnalytics: HubAnalyticsProviding {
+final public class HubAnalytics: HubAnalyticsProviding {
     
-    func trackSuccessPurchase(amount: Double, currency: String) {
+    public static func trackSuccessPurchase(amount: Double, currency: String) {
         HubEventBus.shared.publish(.successPurchase(amount: amount, currency: currency))
     }
     
-    func trackEvent(name: String, params: [String: Any]) {
+    public static func trackEvent(name: String, params: [String: Any]) {
         HubEventBus.shared.publish(.event(name: name, params: params))
     }
 }

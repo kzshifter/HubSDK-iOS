@@ -1,10 +1,3 @@
-//
-//  StormIntegration.swift
-//  HubSDKCore
-//
-//  Created by Vadzim Ivanchanka on 10/31/25.
-//
-
 import Foundation
 
 @MainActor

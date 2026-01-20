@@ -9,7 +9,7 @@ public extension HubSDKCore {
     }
 }
 
-public protocol HubAppsflyerProviding {
+public protocol HubAppsflyerProviding: Sendable {
     var conversionData: [AnyHashable: Any] { get }
 }
 
@@ -45,13 +45,22 @@ public final class HubAppsflyerIntegration: HubDependencyIntegration, AwaitableI
 
 // MARK: - Implementation
 
-internal final class HubAppsflyer: NSObject, HubAppsflyerProviding {
+internal final class HubAppsflyer: NSObject, HubAppsflyerProviding, @unchecked Sendable {
     
     private let config: HubAppsflyerConfiguration
+    private let lock = NSLock()
     
-    var onReady: (() -> Void)?
+    private var _onReady: (() -> Void)?
+    var onReady: (() -> Void)? {
+        get { lock.withLock { _onReady } }
+        set { lock.withLock { _onReady = newValue } }
+    }
     
-    private(set) var conversionData: [AnyHashable: Any] = [:]
+    private var _conversionData: [AnyHashable: Any] = [:]
+    private(set) var conversionData: [AnyHashable: Any] {
+        get { lock.withLock { _conversionData } }
+        set { lock.withLock { _conversionData = newValue } }
+    }
     
     init(config: HubAppsflyerConfiguration) {
         self.config = config

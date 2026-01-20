@@ -1,10 +1,3 @@
-//
-//  HubAppsflyerConfiguration.swift
-//  HubSDKCore
-//
-//  Created by Vadzim Ivanchanka on 12/19/25.
-//
-
 import Foundation
 
 public struct HubAppsflyerConfiguration: Sendable {

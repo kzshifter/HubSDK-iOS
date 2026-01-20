@@ -1,14 +1,7 @@
-//
-//  StormSDKAdaptyProviding.swift
-//  StormSDKAdapty
-//
-//  Created by Vadzim Ivanchanka on 11/25/25.
-//
-
 import Foundation
 import Adapty
 
-// MARK: - StormSDKAdaptyProviding
+// MARK: - HubSDKAdaptyProviding
 
 /// A protocol that defines the interface for subscription management and paywall operations.
 ///
@@ -47,8 +40,16 @@ public protocol HubSDKAdaptyProviding: Sendable {
     /// - Returns: An `AccessEntry` containing the subscription status.
     func validateSubscription(for accessLevels: [AccessLevel]) async -> AccessEntry
     
-    // MARK: Placement Access (Synchronous)
+    /// Validates the subscription status for the default premium access level.
+    ///
+    /// This is a convenience method that checks only the `.premium` access level.
+    /// Use this when your app has a single subscription tier.
+    ///
+    /// - Returns: An `AccessEntry` containing the subscription status.
+    func validateSubscription() async -> AccessEntry
     
+    // MARK: Placement Access (Synchronous)
+
     /// Returns the placement entry for the specified identifier.
     ///
     /// This method provides synchronous access to cached placement data.
@@ -57,7 +58,7 @@ public protocol HubSDKAdaptyProviding: Sendable {
     /// - Parameter placementId: The unique identifier of the placement.
     /// - Returns: The placement entry, or `nil` if not found or SDK is not initialized.
     func placementEntry(with placementId: String) -> PlacementEntry?
-    
+
     /// Decodes and returns the remote configuration for the specified placement.
     ///
     /// This method provides synchronous access to cached remote configuration data.
@@ -66,6 +67,40 @@ public protocol HubSDKAdaptyProviding: Sendable {
     /// - Parameter placementId: The unique identifier of the placement.
     /// - Returns: The decoded configuration, or `nil` if unavailable or decoding fails.
     func remoteConfig<T: Sendable>(for placementId: String) -> T? where T: Decodable
+
+    /// Checks whether a placement is already loaded.
+    ///
+    /// Use this to determine if synchronous access via `placementEntry(with:)`
+    /// will return a value, or if async loading is required.
+    ///
+    /// - Parameter identifier: The placement identifier to check.
+    /// - Returns: `true` if the placement is cached and available.
+    func isPlacementLoaded(_ identifier: String) -> Bool
+
+    // MARK: Placement Access (Asynchronous)
+
+    /// Loads additional placements into the existing bag.
+    ///
+    /// Use this method to load placements on-demand after SDK initialization.
+    /// Already loaded placements are skipped automatically.
+    ///
+    /// - Parameter identifiers: The placement identifiers to load.
+    /// - Returns: Array of newly loaded entries (excludes already cached).
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not initialized.
+    func loadPlacements(_ identifiers: [String]) async throws -> [PlacementEntry]
+
+    /// Retrieves a placement with optional lazy loading.
+    ///
+    /// When `loadIfNeeded` is `true`, fetches the placement from network
+    /// if not already cached. Otherwise returns only from cache.
+    ///
+    /// - Parameters:
+    ///   - identifier: The placement identifier.
+    ///   - loadIfNeeded: If `true`, loads the placement if not cached.
+    /// - Returns: The placement entry.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not initialized.
+    /// - Throws: `HubSDKError.placementNotFound` if not found and loading is disabled.
+    func placementEntry(for identifier: String, loadIfNeeded: Bool) async throws -> PlacementEntry
     
     // MARK: Placement Access (Asynchronous)
     
@@ -167,6 +202,16 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///   - completion: A closure called on the main thread with the access entry.
     func validateSubscription(
         for accessLevels: [AccessLevel],
+        completion: @Sendable @escaping (AccessEntry) -> Void
+    )
+    
+    /// Validates subscription status for the default premium access level with a completion handler.
+    ///
+    /// This is a convenience method that checks only the `.premium` access level.
+    /// Use this when your app has a single subscription tier.
+    ///
+    /// - Parameter completion: A closure called on the main thread with the access entry.
+    func validateSubscription(
         completion: @Sendable @escaping (AccessEntry) -> Void
     )
 }
