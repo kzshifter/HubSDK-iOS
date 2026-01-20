@@ -178,7 +178,7 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///   - completion: A closure called on the main thread with the result.
     func restore(
         for accessLevels: [AccessLevel],
-        completion: @Sendable @escaping (Result<AccessEntry, Error>) -> Void
+        completion: @MainActor @Sendable @escaping (Result<AccessEntry, Error>) -> Void
     )
     
     /// Initiates a purchase with a completion handler.
@@ -190,7 +190,7 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///   - completion: A closure called on the main thread with the result.
     func purchase(
         with product: any AdaptyPaywallProduct,
-        completion: @Sendable @escaping (Result<AdaptyPurchaseResult, Error>) -> Void
+        completion: @MainActor @Sendable @escaping (Result<AdaptyPurchaseResult, Error>) -> Void
     )
     
     /// Validates subscription status with a completion handler.
@@ -202,7 +202,7 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///   - completion: A closure called on the main thread with the access entry.
     func validateSubscription(
         for accessLevels: [AccessLevel],
-        completion: @Sendable @escaping (AccessEntry) -> Void
+        completion: @MainActor @Sendable @escaping (AccessEntry) -> Void
     )
     
     /// Validates subscription status for the default premium access level with a completion handler.
@@ -212,6 +212,6 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///
     /// - Parameter completion: A closure called on the main thread with the access entry.
     func validateSubscription(
-        completion: @Sendable @escaping (AccessEntry) -> Void
+        completion: @MainActor @Sendable @escaping (AccessEntry) -> Void
     )
 }

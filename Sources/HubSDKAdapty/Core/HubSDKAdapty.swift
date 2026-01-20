@@ -422,7 +422,7 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
     
     nonisolated public func validateSubscription(
         for accessLevels: [AccessLevel],
-        completion: @Sendable @escaping (AccessEntry) -> Void
+        completion: @MainActor @Sendable @escaping (AccessEntry) -> Void
     ) {
         Task {
             let result = await validateSubscription(for: accessLevels)
@@ -430,14 +430,21 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
         }
     }
     
-    nonisolated public func validateSubscription(completion: @Sendable @escaping (AccessEntry) -> Void) {
-        guard let accessLevels = cachedSnapshot.config?.accessLevels else { completion(.init(isActive: false, isRenewable: false)); return}
+    nonisolated public func validateSubscription(
+        completion: @MainActor @Sendable @escaping (AccessEntry) -> Void
+    ) {
+        guard let accessLevels = cachedSnapshot.config?.accessLevels else {
+            Task { @MainActor in
+                completion(.init(isActive: false, isRenewable: false))
+            }
+            return
+        }
         validateSubscription(for: accessLevels, completion: completion)
     }
     
     nonisolated public func purchase(
         with product: any AdaptyPaywallProduct,
-        completion: @Sendable @escaping (Result<AdaptyPurchaseResult, Error>) -> Void
+        completion: @MainActor @Sendable @escaping (Result<AdaptyPurchaseResult, Error>) -> Void
     ) {
         Task {
             do {
@@ -451,7 +458,7 @@ extension HubSDKAdapty: HubSDKAdaptyProviding {
     
     nonisolated public func restore(
         for accessLevels: [AccessLevel],
-        completion: @Sendable @escaping (Result<AccessEntry, Error>) -> Void
+        completion: @MainActor @Sendable @escaping (Result<AccessEntry, Error>) -> Void
     ) {
         Task {
             do {
