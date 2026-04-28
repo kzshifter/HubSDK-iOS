@@ -111,8 +111,8 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///
     /// - Parameter placementId: The unique identifier of the placement.
     /// - Returns: The placement entry.
-    /// - Throws: `StormSDKError.notInitialized` if SDK is not ready.
-    /// - Throws: `StormSDKError.placementNotFound` if the placement does not exist.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not ready.
+    /// - Throws: `HubSDKError.placementNotFound` if the placement does not exist.
     func placementEntryAsync(with placementId: String) async throws -> PlacementEntry
     
     /// Decodes and returns the remote configuration for the specified placement.
@@ -122,9 +122,9 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///
     /// - Parameter placementId: The unique identifier of the placement.
     /// - Returns: The decoded configuration.
-    /// - Throws: `StormSDKError.notInitialized` if SDK is not ready.
-    /// - Throws: `StormSDKError.remoteConfigNotAvailable` if configuration is missing.
-    /// - Throws: `StormSDKError.configDecodingFailed` if decoding fails.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not ready.
+    /// - Throws: `HubSDKError.remoteConfigNotAvailable` if configuration is missing.
+    /// - Throws: `HubSDKError.configDecodingFailed` if decoding fails.
     func remoteConfigAsync<T: Sendable>(for placementId: String) async throws -> T where T: Decodable
     
     // MARK: Purchase Operations
@@ -139,8 +139,8 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///   - trackEvent: If `true`, publishes a `successPurchase` event to `HubEventBus`.
     ///     Set to `false` when the caller handles event tracking independently (e.g., `HubPaywallCoordinator`).
     /// - Returns: The purchase result containing transaction details.
-    /// - Throws: `StormSDKError.notInitialized` if SDK is not ready.
-    /// - Throws: `StormSDKError.purchaseFailed` if the purchase fails.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not ready.
+    /// - Throws: `HubSDKError.purchaseFailed` if the purchase fails.
     func purchase(with product: any AdaptyPaywallProduct, trackEvent: Bool) async throws -> AdaptyPurchaseResult
     
     /// Restores previously purchased subscriptions.
@@ -150,8 +150,8 @@ public protocol HubSDKAdaptyProviding: Sendable {
     ///
     /// - Parameter accessLevels: The access levels to check after restoration.
     /// - Returns: An `AccessEntry` containing the restored subscription status.
-    /// - Throws: `StormSDKError.notInitialized` if SDK is not ready.
-    /// - Throws: `StormSDKError.restoreFailed` if restoration fails.
+    /// - Throws: `HubSDKError.notInitialized` if SDK is not ready.
+    /// - Throws: `HubSDKError.restoreFailed` if restoration fails.
     func restore(for accessLevels: [AccessLevel]) async throws -> AccessEntry
     
     func restore() async throws -> AccessEntry

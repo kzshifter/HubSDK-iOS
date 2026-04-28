@@ -17,9 +17,10 @@ public class HubFirebaseIntegration: HubDependencyIntegration {
     }
 }
 
-final class HubFirebase: HubFirebaseProviding {
+final class HubFirebase: HubFirebaseProviding, @unchecked Sendable {
     func start() {
         FirebaseApp.configure()
+        HubEventBus.shared.subscribe(self)
     }
 }
 

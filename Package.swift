@@ -18,7 +18,7 @@ let package = Package(
         .library(name: "HubIntegrationCore", targets: ["HubIntegrationCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/gixdev/AdaptySDK-SK1", branch: "master"),
+        .package(url: "https://github.com/superteamstrm/AdaptySDK-iOS", branch: "master"),
         .package(url: "https://github.com/bitlica/SkarbSDK-iOS", branch: "master"),
         .package(url: "https://github.com/AppsFlyerSDK/AppsFlyerFramework", from: "6.15.0"),
         .package(url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git", from: "12.14.0"),
@@ -44,8 +44,8 @@ let package = Package(
             .target(
                 name: "HubSDKAdapty",
                 dependencies: [
-                    .product(name: "Adapty", package: "AdaptySDK-SK1"),
-                    .product(name: "AdaptyUI", package: "AdaptySDK-SK1"),
+                    .product(name: "Adapty", package: "AdaptySDK-iOS"),
+                    .product(name: "AdaptyUI", package: "AdaptySDK-iOS"),
                     .target(name: "HubIntegrationCore"),
                     .target(name: "HubSDKCore")
                 ]

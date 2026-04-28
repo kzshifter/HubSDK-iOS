@@ -5,13 +5,13 @@ public final class HubAdaptyIntegration: HubDependencyIntegration, AwaitableInte
     public static var name: String { "Adapty" }
     public var provider: HubSDKAdaptyProviding { adapty }
     
-    private let config: StormSDKAdaptyConfiguration
+    private let config: HubSDKAdaptyConfiguration
     private let adapty = HubSDKAdapty()
     
     public private(set) var isReady: Bool = false
     public var onReady: (() -> Void)?
     
-    public init(config: StormSDKAdaptyConfiguration) {
+    public init(config: HubSDKAdaptyConfiguration) {
         self.config = config
     }
     

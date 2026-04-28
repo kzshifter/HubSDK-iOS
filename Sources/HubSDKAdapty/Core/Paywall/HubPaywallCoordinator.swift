@@ -252,6 +252,7 @@ public final class HubPaywallCoordinator {
 
         guard let handle = provider.makePaywall(
             for: identifier,
+            placementId: entry.placementId,
             products: entry.products,
             delegate: self,
             configuration: config,

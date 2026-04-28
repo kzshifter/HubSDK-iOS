@@ -1,7 +1,7 @@
 import Foundation
 
-public enum HubEvent {
-    case conversionDataReceived([String: String])
+public enum HubEvent: @unchecked Sendable {
+    case conversionDataReceived(appsflyerId: String, data: [String: String])
     case successPurchase(amount: Double, currency: String)
     case event(name: String, params: [String: Any])
 }
@@ -12,29 +12,35 @@ public protocol HubEventListener: AnyObject {
 
 public final class HubEventBus: @unchecked Sendable {
     public static let shared = HubEventBus()
-    
+
     private var listeners = NSHashTable<AnyObject>.weakObjects()
     private let lock = NSLock()
-    
+
     private init() {}
-    
+
     public func subscribe(_ listener: HubEventListener) {
         lock.lock()
         defer { lock.unlock() }
         listeners.add(listener)
     }
-    
+
     public func unsubscribe(_ listener: HubEventListener) {
         lock.lock()
         defer { lock.unlock() }
         listeners.remove(listener)
     }
-    
+
     public func publish(_ event: HubEvent) {
         lock.lock()
         let currentListeners = listeners.allObjects.compactMap { $0 as? HubEventListener }
         lock.unlock()
-        
-        currentListeners.forEach { $0.handle(event: event) }
+
+        if Thread.isMainThread {
+            currentListeners.forEach { $0.handle(event: event) }
+        } else {
+            DispatchQueue.main.async {
+                currentListeners.forEach { $0.handle(event: event) }
+            }
+        }
     }
 }

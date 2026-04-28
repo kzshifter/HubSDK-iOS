@@ -77,8 +77,8 @@ internal final class HubSkarb: NSObject, HubSkarbProviding, HubEventListener {
     // MARK: - StormEventListener
     
     nonisolated func handle(event: HubEvent) {
-        if case let .conversionDataReceived(conversionInfo) = event {
-            SkarbSDK.sendSource(broker: .appsflyer, features: conversionInfo, brokerUserID: "")
+        if case let .conversionDataReceived(appsflyerId, conversionInfo) = event {
+            SkarbSDK.sendSource(broker: .appsflyer, features: conversionInfo, brokerUserID: appsflyerId)
         }
     }
 }

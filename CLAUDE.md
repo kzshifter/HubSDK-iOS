@@ -9,7 +9,7 @@ HubSDK is a modular Swift SDK for iOS that unifies analytics, advertising, and m
 - **Language:** Swift 6.0 (strict concurrency)
 - **Platform:** iOS 15.0+
 - **Distribution:** Swift Package Manager only (no CocoaPods/Carthage)
-- **Adapty fork:** Uses a custom fork `gixdev/AdaptySDK-SK1` (StoreKit 1 based), not the official Adapty SPM package
+- **Adapty fork:** Uses a custom fork `superteamstrm/AdaptySDK-iOS` (forked from official `adaptyteam/AdaptySDK-iOS` 3.15.7+, StoreKit 2)
 
 ## Build & Test Commands
 

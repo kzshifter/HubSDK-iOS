@@ -309,7 +309,7 @@ extension HubSDKError {
         error.log(file: file, function: function, line: line)
     }
     
-    /// Log any error as StormSDKError
+    /// Log any error as HubSDKError
     public static func logError(key: HubSDKError, error: Error? = nil, file: String = #file, function: String = #function, line: Int = #line) {
         if let error = error {
             HubSDKError.unknownError(error).log(file: file, function: function, line: line)
@@ -323,7 +323,7 @@ extension HubSDKError {
 
 extension HubSDKError: CustomNSError {
     public static var errorDomain: String {
-        return "com.stormsdk.error"
+        return "com.hubsdk.error"
     }
     
     public var errorUserInfo: [String: Any] {

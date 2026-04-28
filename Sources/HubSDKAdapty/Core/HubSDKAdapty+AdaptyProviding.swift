@@ -3,7 +3,7 @@ import AdaptyUI
 import UIKit
 import HubIntegrationCore
 
-// MARK: - StormSDKAdaptyProviding
+// MARK: - HubSDKAdaptyProviding
 
 extension HubSDKAdapty: HubSDKAdaptyProviding {
     
@@ -248,7 +248,7 @@ extension HubSDKAdapty {
     ///
     /// - Parameter accessLevel: The access level to check after restoration.
     /// - Returns: An `AccessEntry` containing the restored subscription status.
-    /// - Throws: `StormSDKError` if restoration fails.
+    /// - Throws: `HubSDKError` if restoration fails.
     public func restore(for accessLevel: AccessLevel) async throws -> AccessEntry {
         try await restore(for: [accessLevel])
     }

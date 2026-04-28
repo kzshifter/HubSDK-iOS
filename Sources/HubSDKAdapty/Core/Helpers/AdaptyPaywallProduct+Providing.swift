@@ -86,19 +86,10 @@ extension AdaptyPaywallProduct {
     /// - Returns: A formatted price string (e.g., "$9.99").
     public func descriptionPrice(multiplicatorValue: Double = 1.0) -> String {
         let currencySymbol = priceLocale.currencySymbol ?? ""
-        let price: Double
-        
-        if let sk1Product {
-            price = sk1Product.price.doubleValue
-        } else if let sk2Product {
-            price = sk2Product.price.doubleValue
-        } else {
-            price = 0
-        }
-        
+        let price = sk2Product?.price.doubleValue ?? 0
         return String(format: "\(currencySymbol)%.2f", price * multiplicatorValue)
     }
-    
+
     /// Returns a human-readable description of the subscription period.
     ///
     /// The period is derived from the underlying StoreKit product and formatted
@@ -108,42 +99,12 @@ extension AdaptyPaywallProduct {
     ///   period name based on the unit count. Defaults to `false`.
     /// - Returns: A period description string (e.g., "month", "year").
     public func descriptionPeriod(isAdaptiveName: Bool = false) -> String {
-        if sk1Product != nil {
-            return sk1Period(for: self, isAdaptiveName: isAdaptiveName)
-        }
-        return sk2Period(for: self, isAdaptiveName: isAdaptiveName)
-    }
-    
-    // MARK: - Private Methods
-    
-    private func sk1Period(for product: AdaptyPaywallProduct, isAdaptiveName: Bool = false) -> String {
-        guard let period = product.sk1Product?.subscriptionPeriod else {
+        guard let subscription = sk2Product?.subscription else {
             return ""
         }
-        
-        let periodValue = period.numberOfUnits
-        
-        return switch period.unit {
-        case .day:
-            Period.day.description(isAdaptiveName: isAdaptiveName, periodValue: periodValue)
-        case .week:
-            Period.week.description(isAdaptiveName: isAdaptiveName, periodValue: periodValue)
-        case .month:
-            Period.month.description(isAdaptiveName: isAdaptiveName, periodValue: periodValue)
-        case .year:
-            Period.year.description(isAdaptiveName: isAdaptiveName, periodValue: periodValue)
-        @unknown default:
-            Period.day.description(isAdaptiveName: isAdaptiveName, periodValue: periodValue)
-        }
-    }
-    
-    private func sk2Period(for product: AdaptyPaywallProduct, isAdaptiveName: Bool = false) -> String {
-        guard let subscription = product.sk2Product?.subscription else {
-            return ""
-        }
-        
+
         let period = subscription.subscriptionPeriod
-        
+
         return switch period.unit {
         case .day:
             Period.day.description(isAdaptiveName: isAdaptiveName, periodValue: period.value)

@@ -16,6 +16,7 @@ final class HubFacebook: HubFacebookProviding, @unchecked Sendable {
         
         ApplicationDelegate.shared.initializeSDK()
         AppEvents.shared.activateApp()
+        HubEventBus.shared.subscribe(self)
     }
     
     func application(_ application: UIApplication, continue userActivity: NSUserActivity) {

@@ -82,8 +82,7 @@ final class ApplicationDependency {
                 HubAdaptyIntegration(config: .init(
                     apiKey: "public_live_xxxxx",
                     placementIdentifers: ["main_placement", "settings_placement"],
-                    accessLevels: [.premium],
-                    storeKitVersion: .v2
+                    accessLevels: [.premium]
                 )),
                 awaitReady: true
             )
@@ -522,14 +521,16 @@ ads?.showInterstitial(from: viewController) {
 
 **Rewarded:**
 ```swift
-let rewarded = await ads?.showRewarded(from: viewController)
-if rewarded == true {
+// Возвращает RewardedResult? с данными о выручке (revenue, currencyCode, precision).
+// nil — если объявление не показано или пользователь не досмотрел.
+if let result = await ads?.showRewarded(from: viewController) {
     self.giveReward()
+    print("Revenue: \(result.revenue) \(result.currencyCode)")
 }
 
 // Или с callback:
-ads?.showRewarded(from: viewController) { rewarded in
-    if rewarded { self.giveReward() }
+ads?.showRewarded(from: viewController) { result in
+    if result != nil { self.giveReward() }
 }
 ```
 
@@ -676,9 +677,9 @@ class MyListener: HubEventListener {
 
     func handle(event: HubEvent) {
         switch event {
-        case .conversionDataReceived(let data):
+        case .conversionDataReceived(let appsflyerId, let data):
             // Данные атрибуции от AppsFlyer
-            print("Attribution: \(data)")
+            print("Attribution from \(appsflyerId): \(data)")
 
         case .successPurchase(let amount, let currency):
             // Успешная покупка (отправляется автоматически)
@@ -704,7 +705,9 @@ class MyListener: HubEventListener {
 
 | Модуль | Реагирует на |
 |--------|-------------|
-| `HubSkarb` | `.conversionDataReceived` — отправляет source данные |
+| `HubSkarb` | `.conversionDataReceived` — отправляет source данные с `brokerUserID = appsflyerId` |
+| `HubSDKAdapty` | `.conversionDataReceived` — синхронизирует AppsFlyer ID и атрибуцию через `Adapty.setIntegrationIdentifier` / `Adapty.updateAttribution` |
+| `HubAppsflyer` | `.successPurchase`, `.event` — трекает в AppsFlyer |
 | `HubFacebook` | `.successPurchase`, `.event` — трекает в Facebook |
 | `HubFirebase` | `.successPurchase`, `.event` — трекает в Firebase |
 
@@ -712,20 +715,23 @@ class MyListener: HubEventListener {
 
 ## ⚙️ Конфигурации
 
-### StormSDKAdaptyConfiguration
+### HubSDKAdaptyConfiguration
 
 ```swift
-StormSDKAdaptyConfiguration(
+HubSDKAdaptyConfiguration(
     apiKey: String,                    // Adapty Public API Key
     placementIdentifers: [String],     // ID плейсментов для предзагрузки
     accessLevels: [AccessLevel],       // [.premium] или [.custom("vip")]
-    storeKitVersion: .v1 | .v2,        // Версия StoreKit
-    logLevel: .verbose | .error,       // Уровень логов
+    logLevel: .verbose | .error,       // Уровень логов (опционально, по умолчанию — Adapty default)
     chinaClusterEnable: true,          // Китайский кластер
     fallbackName: "fallback",          // Имя fallback JSON (опционально)
     languageCode: "en"                 // Код языка для локализации (по умолчанию — из Locale)
 )
 ```
+
+> Старое имя `StormSDKAdaptyConfiguration` оставлено как `@available(*, deprecated, renamed: "HubSDKAdaptyConfiguration") public typealias` — существующий код продолжит работать с warning.
+>
+> Используется StoreKit 2 (Adapty fork [`superteamstrm/AdaptySDK-iOS`](https://github.com/superteamstrm/AdaptySDK-iOS)). Параметр `storeKitVersion` удалён из конфига.
 
 ### AccessLevel
 
@@ -840,8 +846,8 @@ class SettingsViewController: UIViewController {
     }
 
     @IBAction func watchAdTapped() {
-        ApplicationDependency.shared.googleAdsCore?.showRewarded(from: self) { rewarded in
-            if rewarded { self.giveBonus() }
+        ApplicationDependency.shared.googleAdsCore?.showRewarded(from: self) { result in
+            if result != nil { self.giveBonus() }
         }
     }
 }

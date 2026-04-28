@@ -85,11 +85,12 @@ final class HubEventBusTests: XCTestCase {
         defer { bus.unsubscribe(listener) }
 
         let data = ["media_source": "organic", "campaign": "summer"]
-        bus.publish(.conversionDataReceived(data))
+        bus.publish(.conversionDataReceived(appsflyerId: "test-id", data: data))
 
-        guard case .conversionDataReceived(let received) = listener.receivedEvents.first else {
+        guard case .conversionDataReceived(let id, let received) = listener.receivedEvents.first else {
             return XCTFail("Expected conversionDataReceived event")
         }
+        XCTAssertEqual(id, "test-id")
         XCTAssertEqual(received["media_source"], "organic")
         XCTAssertEqual(received["campaign"], "summer")
     }

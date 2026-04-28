@@ -89,6 +89,7 @@ public extension HubLocalPaywallStateDelegate {
 ///
 ///     func makePaywall(
 ///         for identifier: String,
+///         placementId: String,
 ///         products: [AdaptyPaywallProduct],
 ///         delegate: HubLocalPaywallDelegate,
 ///         configuration: HubPaywallPresentConfiguration,
@@ -109,6 +110,7 @@ public extension HubLocalPaywallStateDelegate {
 ///
 ///     func makePaywall(
 ///         for identifier: String,
+///         placementId: String,
 ///         products: [AdaptyPaywallProduct],
 ///         delegate: HubLocalPaywallDelegate,
 ///         configuration: HubPaywallPresentConfiguration,
@@ -130,6 +132,7 @@ public protocol HubLocalPaywallProvider: AnyObject {
     ///
     /// - Parameters:
     ///   - identifier: The paywall identifier from remote configuration.
+    ///   - placementId: The placement identifier from the Adapty Dashboard.
     ///   - products: The products available for purchase.
     ///   - delegate: The delegate for requesting actions (purchase, restore, close).
     ///   - configuration: The presentation configuration (present type, dismiss policy, etc.).
@@ -138,6 +141,7 @@ public protocol HubLocalPaywallProvider: AnyObject {
     ///   or `nil` if the identifier is not recognized.
     func makePaywall(
         for identifier: String,
+        placementId: String,
         products: [AdaptyPaywallProduct],
         delegate: HubLocalPaywallDelegate,
         configuration: HubPaywallPresentConfiguration,
