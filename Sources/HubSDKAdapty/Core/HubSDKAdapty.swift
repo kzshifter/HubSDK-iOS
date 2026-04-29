@@ -128,6 +128,7 @@ internal actor HubSDKAdapty {
         var builder = AdaptyConfiguration
             .builder(withAPIKey: config.apiKey)
             .with(serverCluster: serverCluster)
+            .with(storeKitVersion: config.storeKitVersion)
 
         if let logLevel = config.logLevel {
             builder = builder.with(logLevel: logLevel)

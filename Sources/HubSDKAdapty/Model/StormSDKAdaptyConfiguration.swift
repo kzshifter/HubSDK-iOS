@@ -39,6 +39,12 @@ public struct HubSDKAdaptyConfiguration: Sendable {
     /// and during validation operations.
     let accessLevels: [AccessLevel]
 
+    /// The StoreKit version to use for purchase operations.
+    ///
+    /// StoreKit 2 provides modern async APIs but requires iOS 15+.
+    /// Defaults to `.v1` for broader compatibility.
+    let storeKitVersion: StoreKitVersion
+
     /// The logging verbosity level for Adapty operations.
     ///
     /// Use `.verbose` during development and `.error` in production.
@@ -70,6 +76,7 @@ public struct HubSDKAdaptyConfiguration: Sendable {
     ///   - apiKey: The public API key from the Adapty dashboard.
     ///   - placementIdentifers: The placement identifiers to preload.
     ///   - accessLevels: The access levels to monitor for subscription status.
+    ///   - storeKitVersion: The StoreKit version to use. Defaults to `.v1`.
     ///   - logLevel: The logging verbosity level. Defaults to `nil`.
     ///   - chinaClusterEnable: Whether to enable China cluster selection. Defaults to `true`.
     ///   - fallbackName: The fallback JSON filename, or `nil` to disable.
@@ -78,6 +85,7 @@ public struct HubSDKAdaptyConfiguration: Sendable {
         apiKey: String,
         placementIdentifers: [String],
         accessLevels: [AccessLevel],
+        storeKitVersion: StoreKitVersion = .v1,
         logLevel: AdaptyLog.Level? = nil,
         chinaClusterEnable: Bool = true,
         fallbackName: String? = nil,
@@ -86,6 +94,7 @@ public struct HubSDKAdaptyConfiguration: Sendable {
         self.apiKey = apiKey
         self.placementIdentifers = placementIdentifers
         self.accessLevels = accessLevels
+        self.storeKitVersion = storeKitVersion
         self.chinaClusterEnable = chinaClusterEnable
         self.logLevel = logLevel
         self.fallbackName = fallbackName
