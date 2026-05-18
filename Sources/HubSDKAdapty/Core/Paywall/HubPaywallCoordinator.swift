@@ -85,6 +85,10 @@ public final class HubPaywallCoordinator {
         
         /// A restore failed with an error.
         case restoreFailed(error: Error)
+
+        /// The user tapped a link/button that requested opening an external URL
+        /// (e.g. Privacy Policy or Terms of Service).
+        case openURL(url: URL)
     }
     
     public typealias ActionHandler = (Action) -> Void
@@ -395,7 +399,10 @@ extension HubPaywallCoordinator: AdaptyPaywallControllerDelegate {
             performDismiss()
             dispatch(.close)
             dispose()
-        default:
+        case .openURL(let url):
+            UIApplication.shared.open(url)
+            dispatch(.openURL(url: url))
+        case .custom:
             break
         }
     }
